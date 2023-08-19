@@ -1,0 +1,29 @@
+{
+  "name": "ecommerce_backend",
+  "version": "1.0.0",
+  "description": "this is a core ecommerce \u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001bbackend for ecommerce project",
+  "main": "index.js",
+  "scripts": {
+    "start:dev": "nodemon server.js",
+    "start:prod": "set NODE_ENV=production && node server.js"
+
+  },
+  "keywords": [
+    "ecommerce"
+  ],
+  "author": "Salman Ali",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-async-handler": "^1.2.0",
+    "express-validator": "^7.0.1",
+    "mongoose": "^7.4.3",
+    "morgan": "^1.10.0",
+    "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
