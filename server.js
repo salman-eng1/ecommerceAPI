@@ -7,6 +7,7 @@ const dbConnection = require("./config/database");
 const ApiError = require("./utils/apiError");
 const categoryRoute = require("./routes/categoryRoute");
 const subCategoryRoute = require("./routes/subCategoryRoute");
+const brandRoute = require("./routes/brandRoute");
 const globalError = require("./middlewares/errorMiddleware");
 
 //database connection
@@ -19,6 +20,7 @@ const app = express();
 app.use(express.json());
 app.use("/api/v1/categories", categoryRoute);
 app.use("/api/v1/subcategories", subCategoryRoute);
+app.use("/api/v1/brands", brandRoute);
 
 //create custom error and send it to error handling middleware when the route is not found
 app.all("*", (req, res, next) => {
