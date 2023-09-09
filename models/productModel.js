@@ -31,7 +31,7 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: [true, "product price is required"],
       trim: true,
-      maxlength: [20, "Too long product price"],
+      max: [200000, "Too long product price"],
     },
     priceAfterDiscount: {
       type: Number,
@@ -51,7 +51,7 @@ const productSchema = new mongoose.Schema(
       required: [true, "product must belong to category"],
       ref: "Category",
     },
-    subCategory: [
+    subCategories: [
       {
         type: mongoose.Schema.ObjectId,
         required: [true, "product must belong to Sub Category at least"],
