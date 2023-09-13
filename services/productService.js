@@ -8,7 +8,7 @@ const ApiError = require("../utils/apiError");
 exports.getProducts = asyncHandler(async (req, res) => {
   //filtring
   const queryStringObj = { ...req.query }; //if i used queryStringObj=req.query then any changes on the queryString will affect the req.query
-  const excludeField = ["page", "sort", "limit", "fields"];
+  const excludeField = ["page", "sort", "limit", "fields", "keyword"];
   excludeField.forEach((field) => delete queryStringObj[field]);
   let queryStr = JSON.stringify(queryStringObj);
   queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
