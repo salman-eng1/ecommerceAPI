@@ -20,7 +20,8 @@ exports.createSubCategory = asyncHandler(async (req, res) => {
 
 exports.createFilterObj = (req, res, next) => {
   let filterObject = {};
-  if (req.params.categoryId) filterObject = { category: req.params.categoryId };
+  if (req.params.categoryId) 
+  filterObject = { category: req.params.categoryId };
   next();
 };
 
