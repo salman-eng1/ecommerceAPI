@@ -1,54 +1,27 @@
 const asyncHandler = require("express-async-handler");
 const Product = require("../models/productModel");
 const ApiError = require("../utils/apiError");
+const ApiFeatures = require("../utils/apiFeatures");
 
 // @desc     get list of products
 //@route     GET .api/v1/products
 //access     public
 exports.getProducts = asyncHandler(async (req, res) => {
-  //filtring
-  const queryStringObj = { ...req.query }; //if i used queryStringObj=req.query then any changes on the queryString will affect the req.query
-  const excludeField = ["page", "sort", "limit", "fields", "keyword"];
-  excludeField.forEach((field) => delete queryStringObj[field]);
-  let queryStr = JSON.stringify(queryStringObj);
-  queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-  //pagination
-  const page = req.query.page * 1 || 1;
-  const limit = req.query.limit * 1 || 50;
-  const skip = (page - 1) * limit;
-  //build query
-  let mongooseQuery = Product.find(JSON.parse(queryStr))
-    .skip(skip)
-    .limit(limit)
-    .populate({ path: "category", select: "name -_id" });
-  // sort
-  if (req.query.sort) {
-    const sortBy = req.query.sort.split(",").join(" ");
-    mongooseQuery = mongooseQuery.sort(sortBy);
-  } else {
-    mongooseQuery = mongooseQuery.sort("-createdAt");
-  }
-  //fields limitting
-  if (req.query.fields) {
-    const fields = req.query.fields.split(",").join(" ");
-    mongooseQuery = mongooseQuery.select(fields);
-  } else {
-    mongooseQuery = mongooseQuery.select("-__v");
-  }
-  //search
-  if (req.query.keyword) {
-    const query = {};
-    query.$or = [
-      { title: { $regex: req.query.keyword, $options: "i" } },
-      { description: { $regex: req.query.keyword, $options: "i" } },
-    ];
-    mongooseQuery = mongooseQuery.find(query);
-  }
-  
-  //execute query
+  const documentCounts= await Product.countDocuments();
+  const apiFeatures = new ApiFeatures(Product.find(), req.query)
+    .paginate(documentCounts)
+    .filter()
+    .search()
+    .limitFields()
+    .sort();
+
+const {mongooseQuery, paginationResult}=apiFeatures
   const products = await mongooseQuery;
-  res.status(200).json({ results: products.length, page, data: products });
+  res.status(200).json({ results: products.length,paginationResult, data: products });
 });
+
+//build query
+// .populate({ path: "category", select: "name -_id" });
 
 // @desc     getproductById
 //@route     GET .api/v1/products/:id
