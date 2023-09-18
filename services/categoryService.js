@@ -1,25 +1,11 @@
-const slugify = require("slugify");
-const asyncHandler = require("express-async-handler");
 const Category = require("../models/categoryModel");
-const ApiError = require("../utils/apiError");
-const ApiFeatures = require("../utils/apiFeatures");
 const factory = require("./handlerFactory");
 
 // @desc     get list of categories
 //@route     GET .api/v1/categories
 //access     public
-exports.getCategories = asyncHandler(async (req, res) => {
-  const documentCounts = await Category.countDocuments();
-  const apiFeatures = new ApiFeatures(Category.find(), req.query)
-    .paginate(documentCounts)
-    .filter()
-    .search()
-    .limitFields()
-    .sort();
-  const { mongooseQuery, paginationResult } = apiFeatures;
-  const categories = await mongooseQuery;
-  res.status(200).json({ results: categories.length, paginationResult, data: categories });
-});
+exports.getCategories = factory.getAll(Category);
+
 
 // @desc     getCategoryById
 //@route     GET .api/v1/categories/:id

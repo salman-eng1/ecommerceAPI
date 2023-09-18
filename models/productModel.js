@@ -75,4 +75,12 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+productSchema.pre(/^find/, function (next) {
+  this.populate({
+    //(this) will be used to refer to the query that is using find
+    path: "category",
+    select: "name -_id",
+  });
+  next();
+});
 module.exports = mongoose.model("Product", productSchema);

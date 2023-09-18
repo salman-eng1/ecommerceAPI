@@ -1,6 +1,8 @@
 const express = require("express");
 
-const subCategoriesRoute=require('./subCategoryRoute');
+const multer = require("multer");
+
+const subCategoriesRoute = require("./subCategoryRoute");
 
 const router = express.Router();
 const {
@@ -17,15 +19,22 @@ const {
   deleteCategory,
 } = require("../services/categoryService");
 
+const upload = multer({ dest: "uploads/categories" });
 
 //get all sub categories for specific parent category by its ID
-router.use('/:categoryId/subcategories', subCategoriesRoute);
-
+router.use("/:categoryId/subcategories", subCategoriesRoute);
 
 router
   .route("/")
   .get(getCategories)
-  .post(createCategoryValidator, createCategory);
+  .post(
+    upload.single("image"),
+    (req, res, next) => {
+      console.log(req.file);
+    },
+    createCategoryValidator,
+    createCategory
+  );
 router
   .route("/:id")
   .get(getCategoryValidator, getCategory)
