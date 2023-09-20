@@ -4,8 +4,7 @@ const factory = require("./handlerFactory");
 // @desc     get list of products
 //@route     GET .api/v1/products
 //access     public
-exports.getProducts = factory.getAll(Product,'Products');
-
+exports.getProducts = factory.getAll(Product, "Products");
 
 //build query
 // .populate({ path: "category", select: "name -_id" });
