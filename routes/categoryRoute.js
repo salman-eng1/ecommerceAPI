@@ -19,7 +19,6 @@ const {
   deleteCategory,
 } = require("../services/categoryService");
 
-
 //get all sub categories for specific parent category by its ID
 router.use("/:categoryId/subcategories", subCategoriesRoute);
 
@@ -35,6 +34,11 @@ router
 router
   .route("/:id")
   .get(getCategoryValidator, getCategory)
-  .put(updateCategoryValidator, updateCategory)
+  .put(
+    uploadCategoryImage,
+    resizeImage,
+    updateCategoryValidator,
+    updateCategory
+  )
   .delete(deleteCategoryValidator, deleteCategory);
 module.exports = router;
