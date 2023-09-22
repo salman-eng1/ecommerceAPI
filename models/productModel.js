@@ -74,7 +74,31 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+const setImageURL = (doc) => {
+  if (doc.imageCover) {
+    const imageUrl = `${process.env.BASE_URL}/products/${doc.imageCover}`;
+    doc.imageCover = imageUrl;
+  }
+  if (doc.images) {
+  const imageList=[];
+    doc.images.forEach(image => {
+      const imageUrl = `${process.env.BASE_URL}/products/${image}`;
+      imageList.push(imageUrl);
+    });
+    doc.images = imageList;
+  }
+};
+//the following code means when the document is stored in db with image name
+// while the image will return url whenever immediatley in the create response
+productSchema.post("save", (doc) => {
+  setImageURL(doc);
+});
 
+//the following code means when the document is stored in db with image name
+// while the image will return url whenever you get the document
+productSchema.post("init", (doc) => {
+  setImageURL(doc);
+});
 productSchema.pre(/^find/, function (next) {
   this.populate({
     //(this) will be used to refer to the query that is using find

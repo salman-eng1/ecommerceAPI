@@ -46,7 +46,7 @@ if (process.env.NODE_ENV == "development") {
   console.log(`mode: ${process.env.NODE_ENV}`);
 }
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT;
 const server = app.listen(PORT, () => {
   console.log(`server is running on port ${PORT}`);
 });

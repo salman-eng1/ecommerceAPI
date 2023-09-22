@@ -25,7 +25,7 @@ exports.createCategoryValidator = [
 ];
 exports.updateCategoryValidator = [
   check("id").isMongoId().withMessage("invalid category id"),
-  body("name").custom((val, { req }) => {
+  body("name").optional().custom((val, { req }) => {
     req.body.slug = slugify(val);
 
     return true; //if the validation is passed
