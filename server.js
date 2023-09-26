@@ -9,6 +9,7 @@ const ApiError = require("./utils/apiError");
 const categoryRoute = require("./routes/categoryRoute");
 const subCategoryRoute = require("./routes/subCategoryRoute");
 const brandRoute = require("./routes/brandRoute");
+const userRoute = require("./routes/userRoute");
 const productRoute = require("./routes/productRoutes");
 const globalError = require("./middlewares/errorMiddleware");
 
@@ -28,7 +29,7 @@ app.use("/api/v1/categories", categoryRoute);
 app.use("/api/v1/subcategories", subCategoryRoute);
 app.use("/api/v1/brands", brandRoute);
 app.use("/api/v1/products", productRoute);
-
+app.use("/api/v1/users", userRoute);
 
 //create custom error and send it to error handling middleware when the route is not found
 app.all("*", (req, res, next) => {
