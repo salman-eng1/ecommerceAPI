@@ -1,9 +1,11 @@
 const { v4: uuidv4 } = require("uuid");
 const sharp = require("sharp");
 const asyncHandler = require("express-async-handler");
+const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
 const factory = require("./handlerFactory");
 const { uploadSingleImage } = require("../middlewares/uploadImageMiddlware");
+const ApiError = require("../utils/apiError");
 
 //Memory Storage
 exports.uploadUserImage = uploadSingleImage("profileImg");
@@ -49,8 +51,46 @@ exports.createUser = factory.createOne(User);
 //@route     PUT .api/v1/users/:id
 //access     private
 
-exports.updateUser = factory.updateOne(User);
+exports.updateUser = asyncHandler(async (req, res, next) => {
+  const document = await User.findByIdAndUpdate(
+    req.params.id,
+    {
+      name: req.body.name,
+      slug: req.body.slug,
+      phone: req.body.phone,
+      email: req.body.email,
+      profileImg: req.body.profileImg,
+      role: req.body.role,
+    },
+    {
+      new: true,
+    }
+  );
+  if (!document) {
+    return next(
+      new ApiError(` ${User} is not updated for id: ${req.params.id}`, 404)
+    );
+  }
+  res.status(200).json({ date: document });
+});
 
+exports.changeUserPassword = asyncHandler(async (req, res, next) => {
+  const document = await User.findByIdAndUpdate(
+    req.params.id,
+    {
+      password: await bcrypt.hash(req.body.password, 12),
+    },
+    {
+      new: true,
+    }
+  );
+  if (!document) {
+    return next(
+      new ApiError(` ${User} password is not updated for id: ${req.params.id}`, 404)
+    );
+  }
+  res.status(200).json({ date: document });
+});
 // @desc     update specific Category
 //@route     DELETE /api/v1/users/:id
 //access     private

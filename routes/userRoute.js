@@ -1,12 +1,13 @@
 const express = require("express");
 
 const router = express.Router();
-// const {
-//   getCategoryValidator,
-//   updateCategoryValidator,
-//   deleteCategoryValidator,
-//   createCategoryValidator,
-// } = require("../utils/validators/categoryValidator");
+const {
+  getUserValidator,
+  updateUserValidator,
+  deleteUserValidator,
+  createUserValidator,
+  changeUserPasswordValidator,
+} = require("../utils/validators/userValidator");
 const {
   getUsers,
   createUser,
@@ -15,24 +16,23 @@ const {
   resizeImage,
   updateUser,
   deleteUser,
+  changeUserPassword,
 } = require("../services/userService");
 
 router
   .route("/")
   .get(getUsers)
-  .post(
-    uploadUserImage,
-    resizeImage,
-    //createCategoryValidator,
-    createUser
-  );
+  .post(uploadUserImage, resizeImage, createUserValidator, createUser);
 router
   .route("/:id")
-  .get(getUser)
-  .put(
-    uploadUserImage,
-    resizeImage,
-    updateUser
-  )
-  .delete(deleteUser);
+  .get(getUserValidator, getUser)
+  .put(uploadUserImage, resizeImage, updateUserValidator, updateUser)
+  .delete(deleteUserValidator, deleteUser);
+
+router.put(
+  "/changepassword/:id",
+  changeUserPasswordValidator,
+  changeUserPassword
+);
+
 module.exports = router;
