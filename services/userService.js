@@ -79,6 +79,7 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
     req.params.id,
     {
       password: await bcrypt.hash(req.body.password, 12),
+      passwordChangedAt: Date.now(),
     },
     {
       new: true,
@@ -86,7 +87,10 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
   );
   if (!document) {
     return next(
-      new ApiError(` ${User} password is not updated for id: ${req.params.id}`, 404)
+      new ApiError(
+        ` ${User} password is not updated for id: ${req.params.id}`,
+        404
+      )
     );
   }
   res.status(200).json({ date: document });

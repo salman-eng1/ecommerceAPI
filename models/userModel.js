@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { stringify } = require("uuid");
 const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
@@ -26,9 +25,14 @@ const userSchema = new mongoose.Schema(
       required: [true, "password is required"],
       minlength: [6, "too short password"],
     },
+    passwordChangedAt: Date,
+    passwordResetCode: String,
+    passwordResetExpires: Date,
+    passwordResetVerfied: Boolean,
+
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["user", "manager", "admin"],
       default: "user",
     },
     active: {

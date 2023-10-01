@@ -2,18 +2,15 @@ const express = require("express");
 
 const router = express.Router();
 const {
-  signuprValidator,
+  signupValidator,
   loginValidator,
 } = require("../utils/validators/authValidator");
-const { signup, login } = require("../services/authService");
+const { signup, login,forgetPassword } = require("../services/authService");
 
-router.route("/signup").post(signuprValidator, signup);
+router.post('/signup',signupValidator, signup);
 
-router.route("/login").post(loginValidator, login);
-// router
-//   .route("/:id")
-//   .get(getUserValidator, getUser)
-//   .put(uploadUserImage, resizeImage, updateUserValidator, updateUser)
-//   .delete(deleteUserValidator, deleteUser);
+router.post("/login",loginValidator, login);
+router.post("/forgetPassword", forgetPassword);
+
 
 module.exports = router;

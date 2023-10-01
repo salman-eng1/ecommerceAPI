@@ -114,7 +114,7 @@ exports.changeUserPasswordValidator = [
       }
 
       // verify password confirm
-      if (val !== req.body.passwordConfirm) {
+      if (val !== req.body.confirmPassword) {
         throw new Error("password information incorrect");
       }
       return true;

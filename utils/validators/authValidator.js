@@ -4,7 +4,7 @@ const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const User = require("../../models/userModel");
 //validation process will get the id from the request as calrified in the following rule
 
-exports.signuprValidator = [
+exports.signupValidator = [
   check("name")
     .notEmpty()
     .withMessage("user name required")

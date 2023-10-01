@@ -27,7 +27,6 @@ const globalError = (err, req, res, next) => {
   err.status = err.status || "error";
   if (process.env.NODE_ENV === "development") {
     sendErrorForDev(err, res);
-    console.log(err);
   } else {
     if (err.name === "JsonWebTokenError") err = handleJwtInvalidSignature();
     if (err.name === "TokenExpiredError") err = handleJwtExpired();

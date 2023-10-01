@@ -12,13 +12,15 @@ exports.uploadCategoryImage=uploadSingleImage("image")
 // use memory storage only when you have to process the image
 exports.resizeImage = asyncHandler(async (req, res, next) => {
   const fileName = `category-${uuidv4()}-${Date.now()}.jpeg`;
+ if (req.file){
   await sharp(req.file.buffer)
-    .resize(600, 600)
-    .toFormat("jpeg")
-    .jpeg({ quality: 90 })
-    .toFile(`uploads/categories/${fileName}`);
+  .resize(600, 600)
+  .toFormat("jpeg")
+  .jpeg({ quality: 90 })
+  .toFile(`uploads/categories/${fileName}`);
 
-  req.body.image = fileName;
+req.body.image = fileName;
+ }
   next();
 });
 //console.log(uploadCategoryImage);

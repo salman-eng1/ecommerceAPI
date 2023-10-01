@@ -19,7 +19,7 @@ const {
   deleteCategory,
 } = require("../services/categoryService");
 
-const AuthService=require("../services/authService")
+const authService = require("../services/authService");
 
 //get all sub categories for specific parent category by its ID
 router.use("/:categoryId/subcategories", subCategoriesRoute);
@@ -28,7 +28,8 @@ router
   .route("/")
   .get(getCategories)
   .post(
-    AuthService.protect,
+    authService.protect,
+    authService.allowedTo("admin", "manager"),
     uploadCategoryImage,
     resizeImage,
     createCategoryValidator,
@@ -38,10 +39,17 @@ router
   .route("/:id")
   .get(getCategoryValidator, getCategory)
   .put(
+    authService.protect,
+    authService.allowedTo("admin", "manager"),
     uploadCategoryImage,
     resizeImage,
     updateCategoryValidator,
     updateCategory
   )
-  .delete(deleteCategoryValidator, deleteCategory);
+  .delete(
+    authService.protect,
+    authService.allowedTo("admin", "manager"),
+    deleteCategoryValidator,
+    deleteCategory
+  );
 module.exports = router;

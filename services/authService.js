@@ -1,6 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
+const { createHmac } = require("node:crypto");
 const bcrypt = require("bcryptjs");
+const sendEmail = require("../utils/sendEmail");
 const ApiError = require("../utils/apiError");
 const User = require("../models/userModel");
 
@@ -32,6 +34,7 @@ exports.login = asyncHandler(async (req, res, next) => {
   res.status(201).json({ data: user, token });
 });
 
+//desc    make sure that user is logged in
 exports.protect = asyncHandler(async (req, res, next) => {
   //1) check if token exists, if exsists get it
   let token;
@@ -40,18 +43,16 @@ exports.protect = asyncHandler(async (req, res, next) => {
     req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
-    console.log(token);
   }
   if (!token) {
     return next(new ApiError("please login to get access to this route", 401));
   }
 
   //2)verify token (no change happens, expired token)
-  const decode = jwt.verify(token, process.env.JWT_SECRET_KEY);
-  console.log(decode);
+  const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
   //3)check if user exists and not changed
-  const currentUser = await User.findById(decode.userId);
+  const currentUser = await User.findById(decoded.userId);
   if (!currentUser) {
     return next(
       new ApiError(
@@ -62,4 +63,69 @@ exports.protect = asyncHandler(async (req, res, next) => {
   }
 
   //4) check if user change his password after token created
+  if (currentUser.passwordChangedAt) {
+    const passChangedTimestamp = parseInt(
+      currentUser.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    if (passChangedTimestamp > decoded.iat) {
+      return next(
+        new ApiError("password is changed recently, please login again", 401)
+      );
+    }
+  }
+
+  req.user = currentUser;
+  next();
+});
+
+//desc     Authorization (user permissiones)
+exports.allowedTo = (...roles) =>
+  asyncHandler(async (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new ApiError("You are not allowed to access this route", 403)
+      );
+    }
+    next();
+  });
+
+exports.forgetPassword = asyncHandler(async (req, res, next) => {
+  //1)  get user by email
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    next(new ApiError("your not allowed to access this route", 401));
+  }
+  //2) if user exist, generate hashed reset random 6 digits and save it in db
+  const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+  const secret = process.env.JWT_SECRET_KEY;
+  const hashedResetCode = createHmac("sha256", secret)
+    .update(resetCode)
+    .digest("hex");
+
+  user.passwordResetCode = hashedResetCode;
+  //add expiration time for password reset (10m)
+  user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+  user.passwordResetVerfied = false;
+  await user.save();
+
+  //3) send the reset code via email
+  const message = `Hi ${user.name}, \n we received a request to reset the password on your E-shop account \n ${resetCode}  \n Enter the code to complete the reset \n thanks for helping us keeping your account secure \n The E-Shop Team`;
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "your password reset code (valide for 10 m)",
+      message: message,
+    });
+  } catch (err) {
+    user.passwordResetCode = undefined;
+    user.passwordResetExpires = undefined;
+    user.passwordResetVerfied = undefined;
+    await user.save();
+    return next(new ApiError("there is an error in sending email", 500));
+  }
+  res
+    .status(200)
+    .json({ status: "sucess", message: "reset code sent to email" });
 });
