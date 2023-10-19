@@ -39,6 +39,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    loginAt: {
+      type: Date,
+      default: null,
+    },
+    workingHours:{
+      type: String,
+      default: 0
+    },
+    logoutAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

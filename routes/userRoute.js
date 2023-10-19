@@ -26,7 +26,6 @@ router
   .get(
     authService.protect,
     authService.allowedTo("admin"),
-    getUserValidator,
     getUsers
   )
   .post(
