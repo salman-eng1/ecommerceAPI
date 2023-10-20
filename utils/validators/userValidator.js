@@ -1,127 +1,157 @@
-const { check, body } = require("express-validator");
-const slugify = require("slugify");
-const bcrypt = require("bcryptjs");
-const validatorMiddleware = require("../../middlewares/validatorMiddleware");
-const User = require("../../models/userModel");
-//validation process will get the id from the request as calrified in the following rule
-
-exports.getUserValidator = [
-  check("id").isMongoId().withMessage("invalid user id"),
-  validatorMiddleware,
-];
+const slugify = require('slugify');
+const bcrypt = require('bcryptjs');
+const { check, body } = require('express-validator');
+const validatorMiddleware = require('../../middlewares/validatorMiddleware');
+const User = require('../../models/userModel');
 
 exports.createUserValidator = [
-  check("name")
+  check('name')
     .notEmpty()
-    .withMessage("user name required")
+    .withMessage('User required')
     .isLength({ min: 3 })
-    .withMessage("Too short user name")
-    .isLength({ max: 32 })
-    .withMessage("Too long user name")
+    .withMessage('Too short User name')
     .custom((val, { req }) => {
       req.body.slug = slugify(val);
-      return true; //if the validation is passed
+      return true;
     }),
-  check("email")
+
+  check('email')
     .notEmpty()
-    .withMessage("Email required")
+    .withMessage('Email required')
     .isEmail()
-    .withMessage("invalid Email address")
+    .withMessage('Invalid email address')
     .custom((val) =>
       User.findOne({ email: val }).then((user) => {
         if (user) {
-          return Promise.reject(new Error("email already exists"));
+          return Promise.reject(new Error('E-mail already in user'));
         }
       })
     ),
-  check("password")
+
+  check('password')
     .notEmpty()
-    .withMessage("user password required")
+    .withMessage('Password required')
     .isLength({ min: 6 })
-    .withMessage("user password must be at least 6 characters")
+    .withMessage('Password must be at least 6 characters')
     .custom((password, { req }) => {
       if (password !== req.body.passwordConfirm) {
-        throw new Error("password information incorrect");
+        throw new Error('Password Confirmation incorrect');
       }
       return true;
     }),
-  check("passwordConfirm")
+
+  check('passwordConfirm')
     .notEmpty()
-    .withMessage("password confirmation is required"),
+    .withMessage('Password confirmation required'),
 
-  check("profileImg").optional(),
-  check("role").optional(),
-
-  check("phone")
+  check('phone')
     .optional()
-    .isMobilePhone(["ar-SY", "ar-EG"])
-    .withMessage("invalid phone number, only egypt and syria are allowed"),
+    .isMobilePhone(['ar-EG', 'ar-SA'])
+    .withMessage('Invalid phone number only accepted Egy and SA Phone numbers'),
+
+  check('profileImg').optional(),
+  check('role').optional(),
+
+  validatorMiddleware,
+];
+
+exports.getUserValidator = [
+  check('id').isMongoId().withMessage('Invalid User id format'),
   validatorMiddleware,
 ];
 
 exports.updateUserValidator = [
-  check("id").isMongoId().withMessage("invalid user id"),
-  body("name")
+  check('id').isMongoId().withMessage('Invalid User id format'),
+  body('name')
     .optional()
     .custom((val, { req }) => {
       req.body.slug = slugify(val);
-      return true; //if the validation is passed
+      return true;
     }),
-  check("email")
+  check('email')
     .notEmpty()
-    .withMessage("Email required")
+    .withMessage('Email required')
     .isEmail()
-    .withMessage("invalid Email address")
+    .withMessage('Invalid email address')
     .custom((val) =>
       User.findOne({ email: val }).then((user) => {
         if (user) {
-          return Promise.reject(new Error("email already exists"));
+          return Promise.reject(new Error('E-mail already in user'));
         }
       })
     ),
-  check("profileImg").optional(),
-  check("role").optional(),
-
-  check("phone")
+  check('phone')
     .optional()
-    .isMobilePhone(["ar-SY", "ar-EG"])
-    .withMessage("invalid phone number, only egypt and syria are allowed"),
+    .isMobilePhone(['ar-EG', 'ar-SA'])
+    .withMessage('Invalid phone number only accepted Egy and SA Phone numbers'),
+
+  check('profileImg').optional(),
+  check('role').optional(),
   validatorMiddleware,
 ];
+
 exports.changeUserPasswordValidator = [
-  check("id").notEmpty().withMessage("user id is required"),
-  body("currentPassword")
+  check('id').isMongoId().withMessage('Invalid User id format'),
+  body('currentPassword')
     .notEmpty()
-    .withMessage("current password must not be empty"),
-  body("confirmPassword")
+    .withMessage('You must enter your current password'),
+  body('passwordConfirm')
     .notEmpty()
-    .withMessage("confirm password must not be empty"),
-  body("password")
+    .withMessage('You must enter the password confirm'),
+  body('password')
     .notEmpty()
-    .withMessage("password must not be empty")
+    .withMessage('You must enter new password')
     .custom(async (val, { req }) => {
-      //verify current password
+      // 1) Verify current password
       const user = await User.findById(req.params.id);
       if (!user) {
-        throw new Error("there is no user for this id");
+        throw new Error('There is no user for this id');
       }
       const isCorrectPassword = await bcrypt.compare(
         req.body.currentPassword,
         user.password
       );
       if (!isCorrectPassword) {
-        throw new Error("Incorrect current password");
+        throw new Error('Incorrect current password');
       }
 
-      // verify password confirm
-      if (val !== req.body.confirmPassword) {
-        throw new Error("password information incorrect");
+      // 2) Verify password confirm
+      if (val !== req.body.passwordConfirm) {
+        throw new Error('Password Confirmation incorrect');
       }
       return true;
     }),
   validatorMiddleware,
 ];
+
 exports.deleteUserValidator = [
-  check("id").isMongoId().withMessage("invalid user id"),
+  check('id').isMongoId().withMessage('Invalid User id format'),
+  validatorMiddleware,
+];
+
+exports.updateLoggedUserValidator = [
+  body('name')
+    .optional()
+    .custom((val, { req }) => {
+      req.body.slug = slugify(val);
+      return true;
+    }),
+  check('email')
+    .notEmpty()
+    .withMessage('Email required')
+    .isEmail()
+    .withMessage('Invalid email address')
+    .custom((val) =>
+      User.findOne({ email: val }).then((user) => {
+        if (user) {
+          return Promise.reject(new Error('E-mail already in user'));
+        }
+      })
+    ),
+  check('phone')
+    .optional()
+    .isMobilePhone(['ar-EG', 'ar-SA'])
+    .withMessage('Invalid phone number only accepted Egy and SA Phone numbers'),
+
   validatorMiddleware,
 ];
