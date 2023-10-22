@@ -1,57 +1,96 @@
-const path = require("path");
-const express = require("express");
-const dotenv = require("dotenv"); // import the library dotenv
-const morgan = require("morgan");
+const path = require('path');
 
-dotenv.config({ path: ".env" });
-const ApiError = require("./utils/apiError");
-const globalError = require("./middlewares/errorMiddleware");
-const dbConnection = require("./config/database");
-const mountRoutes = require("./routes");
+const express = require('express');
+const dotenv = require('dotenv');
+const morgan = require('morgan');
+const cors = require('cors');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
 
-//database connection
+dotenv.config({ path: '.env' });
+const ApiError = require('./utils/apiError');
+const globalError = require('./middlewares/errorMiddleware');
+const dbConnection = require('./config/database');
+// Routes
+const mountRoutes = require('./routes');
+const { webhookCheckout } = require('./services/orderService');
+
+// Connect with db
 dbConnection();
 
-//express server
+// express app
 const app = express();
 
-//Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Enable other domains to access your application
+app.use(cors());
+app.options('*', cors());
 
-app.use(express.static(path.join(__dirname, "uploads")));
+// compress all responses
+app.use(compression());
 
-mountRoutes(app);
+// Checkout webhook
+app.post(
+  '/webhook-checkout',
+  express.raw({ type: 'application/json' }),
+  webhookCheckout
+);
 
-//create custom error and send it to error handling middleware when the route is not found
-app.all("*", (req, res, next) => {
-  next(new ApiError(`can't find this route ${req.originalUrl}`, 400));
-});
-//(this is GLOBAL ERROR HANDLING MIDDELWARE)
-//this is how we define error handling middlware in express
-//(when passing four arguments the express will give me the error in the first attribute then i can control the errors and manipulate them)
-//next will go to the next middleware
-app.use(globalError);
+// Middlewares
+app.use(express.json({ limit: '20kb' }));
 
-// eslint-disable-next-line eqeqeq
-if (process.env.NODE_ENV == "development") {
-  app.use(morgan("dev"));
+//static files are getting to be served without needing to route the request through the application logic
+app.use(express.static(path.join(__dirname, 'uploads')));
+
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
   console.log(`mode: ${process.env.NODE_ENV}`);
 }
 
-const PORT = process.env.PORT;
-const server = app.listen(PORT, () => {
-  console.log(`server is running on port ${PORT}`);
+// Limit each IP to 100 requests per `window` (here, per 15 minutes)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message:
+    'Too many accounts created from this IP, please try again after an hour',
 });
 
-//handle rejections outside express
-//any function that have no ".catch" will trigger an event called "unhandledRejection"
-// we listen to this event to handle this on premise errors globaly
-process.on("unhandledRejection", (err) => {
-  console.error(`unhandledRejection Error: ${err.name} | ${err.messaage}`);
+// Apply the rate limiting middleware to all requests
+app.use('/api', limiter);
+
+// Middleware to protect against HTTP Parameter Pollution attacks
+app.use(
+  hpp({
+    whitelist: [
+      'price',
+      'sold',
+      'quantity',
+      'ratingsAverage',
+      'ratingsQuantity',
+    ],
+  })
+);
+
+// Mount Routes
+mountRoutes(app);
+
+app.all('*', (req, res, next) => {
+  next(new ApiError(`Can't find this route: ${req.originalUrl}`, 400));
+});
+
+// Global error handling middleware for express
+app.use(globalError);
+
+const PORT = process.env.PORT || 8000;
+const server = app.listen(PORT, () => {
+  console.log(`App running running on port ${PORT}`);
+});
+
+// Handle rejection outside express
+process.on('unhandledRejection', (err) => {
+  console.error(`UnhandledRejection Errors: ${err.name} | ${err.message}`);
   server.close(() => {
-    //to stop accepting incoming requests
-    console.log("shutting down .....");
-    process.exit(1); //exit node js & stop the server
+    console.error(`Shutting down....`);
+    process.exit(1);
   });
 });

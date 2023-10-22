@@ -143,9 +143,9 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
-        name: req.user.name,
-        amount: totalOrderPrice * 100,
-        currency: "egp",
+         name: req.user.name,
+         amount: totalOrderPrice * 100,
+         currency: "AED",
         quantity: 1,
       },
     ],
@@ -209,6 +209,7 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+    console.log(event)
   } catch (err) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
